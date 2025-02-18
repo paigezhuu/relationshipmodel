@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relationship Length Predictor</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+        }
+        input, button {
+            margin: 10px 0;
+            padding: 10px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <h1>Relationship Length Predictor</h1>
+    <form id="relationshipForm">
+        <label for="L_A">How much A likes B (1-10):</label>
+        <input type="number" id="L_A" name="L_A" min="1" max="10" required>
+
+        <label for="L_B">How much B likes A (1-10):</label>
+        <input type="number" id="L_B" name="L_B" min="1" max="10" required>
+
+        <label for="Communication">Communication quality (1-10):</label>
+        <input type="number" id="Communication" name="Communication" min="1" max="10" required>
+
+        <label for="Trust">Trust level (1-5):</label>
+        <input type="number" id="Trust" name="Trust" min="1" max="5" required>
+
+        <label for="Conflict">Conflict frequency (1-10):</label>
+        <input type="number" id="Conflict" name="Conflict" min="1" max="10" required>
+
+        <button type="submit">Submit Data & Predict</button>
+    </form>
+
+    <div id="result">
+        <h3>Prediction Results:</h3>
+        <p id="predictedLength"></p>
+        <p id="mae"></p>
+        <p id="r2"></p>
+    </div>
+
+    <script>
+        document.getElementById("relationshipForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+            
+            let formData = new FormData(this);
+            let data = {
+                L_A: formData.get("L_A"),
+                L_B: formData.get("L_B"),
+                Communication: formData.get("Communication"),
+                Trust: formData.get("Trust"),
+                Conflict: formData.get("Conflict")
+            };
+
+            fetch('/submit_data', {
+                method: 'POST',
+                body: new URLSearchParams(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                document.getElementById("predictedLength").innerText = "Predicted Relationship Length: " + result.predicted_length.toFixed(2) + " months";
+                document.getElementById("mae").innerText = "Mean Absolute Error: " + result.mae.toFixed(2);
+                document.getElementById("r2").innerText = "R² Score: " + result.r2.toFixed(2);
+            })
+            .catch(error => {
+                console.error("Error:", error);
+            });
+        });
+    </script>
+</body>
+</html>
