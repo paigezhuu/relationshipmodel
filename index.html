@@ -16,40 +16,97 @@
             padding: 10px;
             width: 100%;
         }
+        .section {
+            margin-bottom: 40px;
+        }
     </style>
 </head>
 <body>
     <h1>Relationship Length Predictor</h1>
-    <form id="relationshipForm">
-        <label for="L_A">How much A likes B (1-10):</label>
-        <input type="number" id="L_A" name="L_A" min="1" max="10" required>
+    
+    <!-- Section for inputting data into dataset -->
+    <div class="section">
+        <h2>Input Data to Train the Model</h2>
+        <form id="dataForm">
+            <label for="L_A">How much A likes B (1-10):</label>
+            <input type="number" id="L_A" name="L_A" min="1" max="10" required>
 
-        <label for="L_B">How much B likes A (1-10):</label>
-        <input type="number" id="L_B" name="L_B" min="1" max="10" required>
+            <label for="L_B">How much B likes A (1-10):</label>
+            <input type="number" id="L_B" name="L_B" min="1" max="10" required>
 
-        <label for="Communication">Communication quality (1-10):</label>
-        <input type="number" id="Communication" name="Communication" min="1" max="10" required>
+            <label for="Communication">Communication quality (1-10):</label>
+            <input type="number" id="Communication" name="Communication" min="1" max="10" required>
 
-        <label for="Trust">Trust level (1-5):</label>
-        <input type="number" id="Trust" name="Trust" min="1" max="5" required>
+            <label for="Trust">Trust level (1-5):</label>
+            <input type="number" id="Trust" name="Trust" min="1" max="5" required>
 
-        <label for="Conflict">Conflict frequency (1-10):</label>
-        <input type="number" id="Conflict" name="Conflict" min="1" max="10" required>
+            <label for="Conflict">Conflict frequency (1-10):</label>
+            <input type="number" id="Conflict" name="Conflict" min="1" max="10" required>
 
-        <button type="submit">Submit Data & Predict</button>
-    </form>
+            <label for="Relationship_Length">Relationship Length (in months):</label>
+            <input type="number" id="Relationship_Length" name="Relationship_Length" required>
 
-    <div id="result">
-        <h3>Prediction Results:</h3>
-        <p id="predictedLength"></p>
-        <p id="mae"></p>
-        <p id="r2"></p>
+            <button type="submit">Submit Data & Update Model</button>
+        </form>
+        <div id="dataResult"></div>
+    </div>
+
+    <!-- Section for prediction -->
+    <div class="section">
+        <h2>Predict Relationship Length</h2>
+        <form id="predictForm">
+            <label for="L_A">How much A likes B (1-10):</label>
+            <input type="number" id="L_A_pred" name="L_A" min="1" max="10" required>
+
+            <label for="L_B">How much B likes A (1-10):</label>
+            <input type="number" id="L_B_pred" name="L_B" min="1" max="10" required>
+
+            <label for="Communication">Communication quality (1-10):</label>
+            <input type="number" id="Communication_pred" name="Communication" min="1" max="10" required>
+
+            <label for="Trust">Trust level (1-5):</label>
+            <input type="number" id="Trust_pred" name="Trust" min="1" max="5" required>
+
+            <label for="Conflict">Conflict frequency (1-10):</label>
+            <input type="number" id="Conflict_pred" name="Conflict" min="1" max="10" required>
+
+            <button type="submit">Predict Relationship Length</button>
+        </form>
+        <div id="predictionResult"></div>
     </div>
 
     <script>
-        document.getElementById("relationshipForm").addEventListener("submit", function(event) {
+        // Data submission for training
+        document.getElementById("dataForm").addEventListener("submit", function(event) {
             event.preventDefault();
-            
+
+            let formData = new FormData(this);
+            let data = {
+                L_A: formData.get("L_A"),
+                L_B: formData.get("L_B"),
+                Communication: formData.get("Communication"),
+                Trust: formData.get("Trust"),
+                Conflict: formData.get("Conflict"),
+                Relationship_Length: formData.get("Relationship_Length")
+            };
+
+            fetch('/input_data', {
+                method: 'POST',
+                body: new URLSearchParams(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                document.getElementById("dataResult").innerText = result.message;
+            })
+            .catch(error => {
+                console.error("Error:", error);
+            });
+        });
+
+        // Prediction submission
+        document.getElementById("predictForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+
             let formData = new FormData(this);
             let data = {
                 L_A: formData.get("L_A"),
@@ -59,15 +116,13 @@
                 Conflict: formData.get("Conflict")
             };
 
-            fetch('/submit_data', {
+            fetch('/predict', {
                 method: 'POST',
                 body: new URLSearchParams(data)
             })
             .then(response => response.json())
             .then(result => {
-                document.getElementById("predictedLength").innerText = "Predicted Relationship Length: " + result.predicted_length.toFixed(2) + " months";
-                document.getElementById("mae").innerText = "Mean Absolute Error: " + result.mae.toFixed(2);
-                document.getElementById("r2").innerText = "R² Score: " + result.r2.toFixed(2);
+                document.getElementById("predictionResult").innerText = "Predicted Relationship Length: " + result.predicted_length.toFixed(2) + " months";
             })
             .catch(error => {
                 console.error("Error:", error);
